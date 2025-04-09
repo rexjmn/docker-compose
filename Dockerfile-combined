@@ -1,0 +1,34 @@
+FROM php:8.2-apache
+
+# Instalar MySQL y dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    default-mysql-server \
+    default-mysql-client \
+    libpq-dev \
+    libzip-dev \
+    && docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    mysqli \
+    zip
+
+# Configurar Apache
+RUN a2enmod rewrite
+
+# Configurar directorio de trabajo
+WORKDIR /var/www/html
+
+# Copiar archivos de la aplicación
+COPY index.php /var/www/html/
+COPY test.php /var/www/html/
+COPY init.sql /docker-entrypoint-initdb.d/
+
+# Script de arranque para iniciar MySQL y Apache
+COPY start.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start.sh
+
+# Exponer puertos para Apache y MySQL
+EXPOSE 80 3306
+
+# Comando para iniciar servicios
+CMD ["/usr/local/bin/start.sh"]
